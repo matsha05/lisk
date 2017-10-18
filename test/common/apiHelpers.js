@@ -88,7 +88,7 @@ function registerDelegate (account, cb) {
 }
 
 function getForgingStatus (params, cb) {
-	var url = '/api/delegates/forging/status';
+	var url = '/api/delegates/forging';
 	url = paramsHelper(url, params);
 
 	http.get(url, httpCallbackHelper.bind(null, cb));
@@ -126,8 +126,8 @@ function getForgedByAccount (params, cb) {
 	http.get(url, httpCallbackHelper.bind(null, cb));
 }
 
-function getNextForgers (params, cb) {
-	var url = '/api/delegates/getNextForgers';
+function getForgers (params, cb) {
+	var url = '/api/delegates/forgers';
 	url = paramsHelper(url, params);
 
 	http.get(url, httpCallbackHelper.bind(null, cb));
@@ -165,7 +165,7 @@ var getVotersPromise = node.Promise.promisify(getVoters);
 var searchDelegatesPromise = node.Promise.promisify(searchDelegates);
 var putForgingDelegatePromise = node.Promise.promisify(putForgingDelegate);
 var getForgedByAccountPromise = node.Promise.promisify(getForgedByAccount);
-var getNextForgersPromise = node.Promise.promisify(getNextForgers);
+var getForgersPromise = node.Promise.promisify(getForgers);
 var getAccountsPromise = node.Promise.promisify(getAccounts);
 var getPublicKeyPromise = node.Promise.promisify(getPublicKey);
 var getBalancePromise = node.Promise.promisify(getBalance);
@@ -209,7 +209,7 @@ module.exports = {
 	searchDelegatesPromise: searchDelegatesPromise,
 	putForgingDelegatePromise: putForgingDelegatePromise,
 	getForgedByAccountPromise: getForgedByAccountPromise,
-	getNextForgersPromise: getNextForgersPromise,
+	getForgersPromise: getForgersPromise,
 	getAccounts: getAccounts,
 	getAccountsPromise: getAccountsPromise,
 	getPublicKey: getPublicKey,

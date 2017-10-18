@@ -14,7 +14,7 @@ var getForgingStatusPromise = require('../../../common/apiHelpers').getForgingSt
 var searchDelegatesPromise = require('../../../common/apiHelpers').searchDelegatesPromise;
 var putForgingDelegatePromise = require('../../../common/apiHelpers').putForgingDelegatePromise;
 var getForgedByAccountPromise = require('../../../common/apiHelpers').getForgedByAccountPromise;
-var getNextForgersPromise = require('../../../common/apiHelpers').getNextForgersPromise;
+var getForgersPromise = require('../../../common/apiHelpers').getForgersPromise;
 var onNewBlockPromise = node.Promise.promisify(node.onNewBlock);
 var onNewRoundPromise = node.Promise.promisify(node.onNewRound);
 
@@ -385,86 +385,7 @@ describe('GET /api/delegates', function () {
 		});
 	});
 
-	describe('/count', function () {
-
-		it('should be ok', function () {
-			return getCountPromise('delegates').then(function (res) {
-				node.expect(res).to.have.property('success').to.be.ok;
-				node.expect(res).to.have.property('count').to.be.at.least(101);
-
-			});
-		});
-	});
-
-	describe('/voters', function () {
-
-		var account = node.randomAccount();
-
-		// Crediting account and vote delegate
-		before(function () {
-			var promises = [];
-			promises.push(creditAccountPromise(account.address, 1000 * node.normalizer));
-
-			return node.Promise.all(promises).then(function (results) {
-				results.forEach(function (res) {
-					node.expect(res).to.have.property('success').to.be.ok;
-					node.expect(res).to.have.property('transactionId').that.is.not.empty;
-				});
-				return onNewBlockPromise();
-			}).then(function (res) {
-				var transaction = node.lisk.vote.createVote(account.password, ['+' + node.eAccount.publicKey], null);
-				return sendTransactionPromise(transaction).then(function (res) {
-					node.expect(res).to.have.property('success').to.be.ok;
-					node.expect(res).to.have.property('transactionId').that.is.not.empty;
-					return onNewBlockPromise();
-				});
-			});
-		});
-
-		it('using no publicKey should be ok', function () {
-			var params = [
-				'publicKey='
-			];
-
-			return getVotersPromise(params).then(function (res) {
-				node.expect(res).to.have.property('success').to.be.ok;
-				node.expect(res).to.have.property('accounts').that.is.an('array').that.is.empty;
-			});
-		});
-
-		it('using invalid publicKey should fail', function () {
-			var params = [
-				'publicKey=' + 'notAPublicKey'
-			];
-
-			return getVotersPromise(params).then(function (res) {
-				node.expect(res).to.have.property('success').to.be.not.ok;
-				node.expect(res).to.have.property('error');
-			});
-		});
-
-		it('using valid publicKey should be ok', function () {
-			var params = [
-				'publicKey=' + node.eAccount.publicKey
-			];
-
-			return onNewBlockPromise().then(function (res) {
-				return getVotersPromise(params).then(function (res) {
-					node.expect(res).to.have.property('success').to.be.ok;
-					node.expect(res).to.have.property('accounts').that.is.an('array');
-					var flag = 0;
-					for (var i = 0; i < res.accounts.length; i++) {
-						if (res.accounts[i].address === account.address) {
-							flag = 1;
-						}
-					}
-					node.expect(flag).to.equal(1);
-				});
-			});
-		});
-	});
-
-	describe('/search', function () {
+	describe.skip('/search', function () {
 
 		it('using no criteria should fail', function () {
 			var params = [];
@@ -750,7 +671,7 @@ describe('GET /api/delegates', function () {
 		});
 	});
 
-	describe('/forging/status', function () {
+	describe('GET /forging', function () {
 
 		it('using no params should be ok', function () {
 			var params = [];
@@ -811,7 +732,7 @@ describe('GET /api/delegates', function () {
 		});
 	});
 
-	describe('/forging', function () {
+	describe('PUT /forging', function () {
 
 		before(function () {
 			var params = [
@@ -899,145 +820,12 @@ describe('GET /api/delegates', function () {
 		});
 	});
 
-	describe('/forging/getForgedByAccount', function () {
-
-		it('using no params should fail', function () {
-			var params = [];
-
-			return getForgedByAccountPromise(params).then(function (res) {
-				node.expect(res).to.have.property('success').to.be.not.ok;
-				node.expect(res).to.have.property('error').to.eql('Missing required property: generatorPublicKey');
-			});
-		});
-
-		it('using valid params should be ok', function () {
-			var params = [
-				'generatorPublicKey=' + testDelegate.publicKey
-			];
-
-			return getForgedByAccountPromise(params).then(function (res) {
-				node.expect(res).to.have.property('success').to.be.ok;
-				node.expect(res).to.have.property('fees').that.is.a('string');
-				node.expect(res).to.have.property('rewards').that.is.a('string');
-				node.expect(res).to.have.property('forged').that.is.a('string');
-			});
-		});
-
-		it('using valid params with borders should be ok', function () {
-			var params = [
-				'generatorPublicKey=' + testDelegate.publicKey,
-				'start=' + 0,
-				'end=' + 0
-			];
-			return getForgedByAccountPromise(params).then(function (res) {
-				node.expect(res).to.have.property('success').to.be.ok;
-				node.expect(res).to.have.property('fees').that.is.a('string').and.eql('0');
-				node.expect(res).to.have.property('rewards').that.is.a('string').and.eql('0');
-				node.expect(res).to.have.property('forged').that.is.a('string').and.eql('0');
-				node.expect(res).to.have.property('count').that.is.a('string').and.eql('0');
-			});
-		});
-
-		it('using unknown generatorPublicKey should fail', function () {
-			var params = [
-				'generatorPublicKey=' + node.randomAccount().publicKey
-			];
-
-			return getForgedByAccountPromise(params).then(function (res) {
-				node.expect(res).to.have.property('success').to.be.not.ok;
-				node.expect(res).to.have.property('error').to.eql('Account not found');
-			});
-		});
-
-		it('using unknown generatorPublicKey with borders should fail', function () {
-			var params = [
-				'generatorPublicKey=' + node.randomAccount().publicKey,
-				'start=' + 0,
-				'end=' + 0
-			];
-
-			return getForgedByAccountPromise(params).then(function (res) {
-				node.expect(res).to.have.property('success').to.be.not.ok;
-				node.expect(res).to.have.property('error').to.eql('Account not found or is not a delegate');
-			});
-		});
-
-		it('using invalid generatorPublicKey should fail', function () {
-			var params = [
-				'generatorPublicKey=' + 'invalidPublicKey',
-				'start=' + 0,
-				'end=' + 0
-			];
-
-			return getForgedByAccountPromise(params).then(function (res) {
-				node.expect(res).to.have.property('success').to.be.not.ok;
-				node.expect(res).to.have.property('error').to.eql('Object didn\'t pass validation for format publicKey: invalidPublicKey');
-			});
-		});
-
-		it('using no start should be ok', function () {
-			var params = [
-				'generatorPublicKey=' + testDelegate.publicKey,
-				'end=' + 0
-			];
-
-			return getForgedByAccountPromise(params).then(function (res) {
-				node.expect(res).to.have.property('success').to.be.ok;
-				node.expect(res).to.have.property('fees').that.is.a('string').and.eql('0');
-				node.expect(res).to.have.property('rewards').that.is.a('string').and.eql('0');
-				node.expect(res).to.have.property('forged').that.is.a('string').and.eql('0');
-				node.expect(res).to.have.property('count').that.is.a('string').and.eql('0');
-			});
-		});
-
-		it('using no end should be ok', function () {
-			var params = [
-				'generatorPublicKey=' + testDelegate.publicKey,
-				'start=' + 0
-			];
-
-			return getForgedByAccountPromise(params).then(function (res) {
-				node.expect(res).to.have.property('success').to.be.ok;
-				node.expect(res).to.have.property('fees').that.is.a('string');
-				node.expect(res).to.have.property('rewards').that.is.a('string');
-				node.expect(res).to.have.property('forged').that.is.a('string');
-				node.expect(res).to.have.property('count').that.is.a('string');
-			});
-		});
-
-		it('using string start should fail', function () {
-			var params = [
-				'generatorPublicKey=' + testDelegate.publicKey,
-				'start=' + 'one',
-				'end=' + 0
-			];
-
-			return getForgedByAccountPromise(params).then(function (res) {
-				node.expect(res).to.have.property('success').to.be.not.ok;
-				node.expect(res).to.have.property('error').to.eql('Expected type integer but found type string');
-			});
-		});
-
-		it('using string end should fail', function () {
-			var params = [
-				'generatorPublicKey=' + testDelegate.publicKey,
-				'start=' + 0,
-				'end=' + 'two'
-			];
-
-			return getForgedByAccountPromise(params).then(function (res) {
-				node.expect(res).to.have.property('success').to.be.not.ok;
-				node.expect(res).to.have.property('error').to.eql('Expected type integer but found type string');
-			});
-		});
-	});
-
-	describe('/getNextForgers', function () {
+	describe('GET /forgers', function () {
 
 		it('using no params should be ok', function () {
 			var params = [];
 
-			return getNextForgersPromise(params).then(function (res) {
+			return getForgersPromise(params).then(function (res) {
 				node.expect(res).to.have.property('success').to.be.ok;
 				node.expect(res).to.have.property('currentBlock').that.is.a('number');
 				node.expect(res).to.have.property('currentBlockSlot').that.is.a('number');
@@ -1052,7 +840,7 @@ describe('GET /api/delegates', function () {
 				'limit=1'
 			];
 
-			return getNextForgersPromise(params).then(function (res) {
+			return getForgersPromise(params).then(function (res) {
 				node.expect(res).to.have.property('success').to.be.ok;
 				node.expect(res).to.have.property('currentBlock').that.is.a('number');
 				node.expect(res).to.have.property('currentBlockSlot').that.is.a('number');
@@ -1067,7 +855,7 @@ describe('GET /api/delegates', function () {
 				'limit=101'
 			];
 
-			return getNextForgersPromise(params).then(function (res) {
+			return getForgersPromise(params).then(function (res) {
 				node.expect(res).to.have.property('success').to.be.ok;
 				node.expect(res).to.have.property('currentBlock').that.is.a('number');
 				node.expect(res).to.have.property('currentBlockSlot').that.is.a('number');
