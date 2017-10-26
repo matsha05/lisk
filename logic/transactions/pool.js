@@ -471,6 +471,31 @@ TransactionPool.prototype.getReady = function (limit) {
 };
 
 /**
+ * Gets ready, pending and unverified transactions based on limit and reverse option.
+ * @param {boolean} reverse
+ * @param {number} limit
+ * @return {transaction[]} ready + pending + unverified 
+ */
+TransactionPool.prototype.getMergedTransactionList = function (reverse, limit) {
+	var minLimit = (constants.maxTxsPerBlock + 2);
+
+	if (limit <= minLimit || limit > constants.maxSharedTxs) {
+		limit = minLimit;
+	}
+
+	var ready = __private.getTransactionsFromPoolList(pool.verified.ready.transactions, reverse, constants.maxTxsPerBlock);
+	limit -= ready.length;
+
+	var pending = __private.getTransactionsFromPoolList(pool.verified.pending.transactions, reverse, constants.maxTxsPerBlock);
+	limit -= pending.length;
+
+	var unverified = __private.getTransactionsFromPoolList(pool.unverified.transactions, reverse, limit);
+	limit -= unverified.length;
+
+	return ready.concat(pending).concat(unverified);
+};
+
+/**
  * Checks sender has enough credit to apply transaction.
  * @param {transaction} transaction
  * @param {address} sender
