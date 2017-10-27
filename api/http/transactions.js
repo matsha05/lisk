@@ -10,11 +10,9 @@ var httpApi = require('../../helpers/httpApi');
  * 	- get	/
  * 	- get	/get
  * 	- get	/count
- * 	- get	/queued/get
  * 	- get	/queued
  * 	- get	/multisignatures/get
  *  - get	/multisignatures
- * 	- get	/unconfirmed/get
  * 	- get	/unconfirmed
  * 	- post	/
  * @memberof module:transactions
@@ -38,11 +36,9 @@ function TransactionsHttpApi (transactionsModule, app, logger, cache) {
 		'get /': 'getTransactions',
 		'get /get': 'getTransaction',
 		'get /count': 'getTransactionsCount',
-		'get /queued/get': 'getQueuedTransaction',
 		'get /queued': 'getQueuedTransactions',
 		'get /multisignatures/get': 'getMultisignatureTransaction',
 		'get /multisignatures': 'getMultisignatureTransactions',
-		'get /unconfirmed/get': 'getUnconfirmedTransaction',
 		'get /unconfirmed': 'getUnconfirmedTransactions',
 		'post /': 'postTransactions'
 	});
