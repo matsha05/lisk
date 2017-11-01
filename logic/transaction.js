@@ -803,43 +803,6 @@ Transaction.prototype.applyUnconfirmed = function (transaction, sender, requeste
 	// }.bind(this));
 };
 
-/**
- * Merges account into sender address with unconfirmed balance transaction amount.
- * Calls `undoUnconfirmed` based on transaction type (privateTypes). If error merge
- * account with megative amount.
- * @see privateTypes
- * @implements {bignum}
- * @implements {account.merge}
- * @param {transaction} transaction
- * @param {account} sender
- * @param {function} cb - Callback function
- * @return {setImmediateCallback} for errors | cb
- */
-Transaction.prototype.undoUnconfirmed = function (transaction, sender, cb) {
-	var amount = new bignum(transaction.amount.toString());
-	    amount = amount.plus(transaction.fee.toString()).toNumber();
-
-	return setImmediate(cb);
-
-	// TODO: Remove this probably
-	//
-	// this.scope.account.merge(sender.address, {u_balance: amount}, function (err, sender) {
-	// 	if (err) {
-	// 		return setImmediate(cb, err);
-	// 	}
-	//
-	// 	__private.types[transaction.type].undoUnconfirmed.call(this, transaction, sender, function (err) {
-	// 		if (err) {
-	// 			this.scope.account.merge(sender.address, {u_balance: -amount}, function (err2) {
-	// 				return setImmediate(cb, err2 || err);
-	// 			});
-	// 		} else {
-	// 			return setImmediate(cb);
-	// 		}
-	// 	}.bind(this));
-	// }.bind(this));
-};
-
 Transaction.prototype.dbTable = 'transactions';
 
 Transaction.prototype.dbFields = [

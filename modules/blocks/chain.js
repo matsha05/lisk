@@ -340,22 +340,10 @@ Chain.prototype.applyBlock = function (block, saveBlock, cb) {
 	var unconfirmedTransactionIds;
 
 	async.series({
-		// Rewind any unconfirmed transactions before applying block.
-		// TODO: It should be possible to remove this call if we can guarantee that only this function is processing transactions atomically. Then speed should be improved further.
-		// TODO: Other possibility, when we rebuild from block chain this action should be moved out of the rebuild function.
-		undoUnconfirmedList: function (seriesCb) {
-			modules.transactions.undoUnconfirmedList(function (err, ids) {
-				if (err) {
-					// Fatal error, memory tables will be inconsistent
-					library.logger.error('Failed to undo unconfirmed list', err);
+		// TODO: new series: after validate block, validate each transaction and insert into database,
+		// sanitize transactionPool: delete transaction.id and if sender or receipt are in ready pool
+		// list, checkbalance again
 
-					return process.exit(0);
-				} else {
-					unconfirmedTransactionIds = ids;
-					return setImmediate(seriesCb);
-				}
-			});
-		},
 		// Apply transactions to unconfirmed mem_accounts fields.
 		applyUnconfirmed: function (seriesCb) {
 			async.eachSeries(block.transactions, function (transaction, eachSeriesCb) {
@@ -460,15 +448,7 @@ Chain.prototype.applyBlock = function (block, saveBlock, cb) {
 			} else {
 				return seriesCb();
 			}
-		},
-		// Push back unconfirmed transactions list (minus the one that were on the block if applied correctly).
-		// TODO: See undoUnconfirmedList discussion above.
-		applyUnconfirmedIds: function (seriesCb) {
-			// DATABASE write
-			modules.transactions.applyUnconfirmedIds(unconfirmedTransactionIds, function (err) {
-				return setImmediate(seriesCb, err);
-			});
-		},
+		}
 	}, function (err) {
 		// Allow shutdown, database writes are finished.
 		modules.blocks.isActive.set(false);

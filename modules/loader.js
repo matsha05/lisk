@@ -624,10 +624,10 @@ __private.sync = function (cb) {
 	__private.syncTrigger(true);
 
 	async.series({
-		undoUnconfirmedList: function (seriesCb) {
-			library.logger.debug('Undoing unconfirmed transactions before sync');
-			return modules.transactions.undoUnconfirmedList(seriesCb);
-		},
+		// undoUnconfirmedList: function (seriesCb) {
+		// 	library.logger.debug('Undoing unconfirmed transactions before sync');
+		// 	return modules.transactions.undoUnconfirmedList(seriesCb);
+		// },
 		getPeersBefore: function (seriesCb) {
 			library.logger.debug('Establishing broadhash consensus before sync');
 			return modules.transport.getPeers({limit: constants.maxPeers}, seriesCb);
@@ -642,10 +642,11 @@ __private.sync = function (cb) {
 			library.logger.debug('Establishing broadhash consensus after sync');
 			return modules.transport.getPeers({limit: constants.maxPeers}, seriesCb);
 		},
-		applyUnconfirmedList: function (seriesCb) {
-			library.logger.debug('Applying unconfirmed transactions after sync');
-			return modules.transactions.applyUnconfirmedList(seriesCb);
-		}
+		// TODO: check if after loadBlocks FromNetwork it is necessary to sanitize transactionPool
+		// applyUnconfirmedList: function (seriesCb) {
+		// 	library.logger.debug('Applying unconfirmed transactions after sync');
+		// 	return modules.transactions.applyUnconfirmedList(seriesCb);
+		// }
 	}, function (err) {
 		__private.isActive = false;
 		__private.syncTrigger(false);
