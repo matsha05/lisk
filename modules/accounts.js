@@ -133,14 +133,19 @@ Accounts.prototype.setAccountAndGet = function (data, cb) {
 		}
 	}
 
-	return library.logic.account.get({address: address}, cb);
-	// TODO: Refactor for use in memory maybe
-	// library.logic.account.set(address, data, function (err) {
-	// 	if (err) {
-	// 		return setImmediate(cb, err);
-	// 	}
-	// 	return library.logic.account.get({address: address}, cb);
-	// });
+	library.logic.account.get({address: address}, function (err ,account) {
+		if (err) {
+			return setImmediate(cb, err);
+		}
+		if (account === null) {
+			account = {};
+			account.balance = 0;
+			account.address = address;
+			account.publicKey = data.publicKey;
+			account.secondPublicKey = data.secondPublicKey || null;
+		}
+		return setImmediate(cb, null, account);
+	});
 };
 
 /**
