@@ -1,6 +1,10 @@
 BEGIN;
 
-
+DO language plpgsql $$
+BEGIN
+	RAISE NOTICE 'Accounts table migration, please wait...';
+END
+$$;
 
 DROP TABLE IF EXISTS accounts CASCADE;
 
@@ -10,7 +14,9 @@ CREATE TABLE "public".accounts (address varchar(22) NOT NULL,
   public_key_transaction_id varchar(20),
   balance bigint DEFAULT 0 NOT NULL,
   CONSTRAINT pk_accounts PRIMARY KEY (address),
-	CONSTRAINT idx_accounts UNIQUE (public_key));
+	CONSTRAINT idx_accounts_public_key UNIQUE (public_key),
+	CONSTRAINT idx_accounts_transaction_id UNIQUE (transaction_id)
+);
 
 
 CREATE OR REPLACE FUNCTION public.public_key_rollback() RETURNS TRIGGER LANGUAGE PLPGSQL AS $function$
@@ -67,7 +73,5 @@ CREATE
     RAISE WARNING 'Reverting change of secondPublicKey from % to %', ENCODE(OLD."secondPublicKey", 'hex'), ENCODE(NEW."secondPublicKey", 'hex'); NEW."secondPublicKey" = OLD."secondPublicKey";
     END IF; RETURN NEW;
     END $function$ ;
-
-COMMIT;
 
 END;
