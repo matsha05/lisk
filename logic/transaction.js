@@ -666,6 +666,7 @@ Transaction.prototype.apply = function (transaction, block, sender, cb) {
 
 	// Check confirmed sender balance
 	var amount = new bignum(transaction.amount.toString()).plus(transaction.fee.toString());
+	// TODO: check if this is done by pool in all the scenarios
 	var senderBalance = this.checkBalance(amount, 'balance', transaction, sender);
 
 	if (senderBalance.exceeded) {
@@ -691,17 +692,18 @@ Transaction.prototype.apply = function (transaction, block, sender, cb) {
 	 * DApp, InTransfer or OutTransfer.
 	 */
 	__private.types[transaction.type].apply.call(this, transaction, block, sender, function (err) {
-		if (err) {
-			this.scope.account.merge(sender.address, {
-				balance: amount,
-				blockId: block.id,
-				round: slots.calcRound(block.height)
-			}, function (err) {
-				return setImmediate(cb, err);
-			});
-		} else {
-			return setImmediate(cb);
-		}
+		return setImmediate(cb, err);
+		// if (err) {
+		// 	this.scope.account.merge(sender.address, {
+		// 		balance: amount,
+		// 		blockId: block.id,
+		// 		round: slots.calcRound(block.height)
+		// 	}, function (err) {
+		// 		return setImmediate(cb, err);
+		// 	});
+		// } else {
+		// 	return setImmediate(cb);
+		// }
 	}.bind(this));
 
 };

@@ -143,6 +143,7 @@ Accounts.prototype.setAccountAndGet = function (data, cb) {
 			account.address = address;
 			account.publicKey = data.publicKey;
 			account.secondPublicKey = data.secondPublicKey || null;
+			account.multisignatures = data.multisignatures || null;
 		}
 		return setImmediate(cb, null, account);
 	});

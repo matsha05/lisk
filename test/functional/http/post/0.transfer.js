@@ -96,7 +96,7 @@ describe('POST /api/transactions (type 0) transfer funds', function () {
 		it('sending transaction with same id twice should fail', function () {
 			return sendTransactionPromise(goodTransaction).then(function (res) {
 				node.expect(res).to.have.property('success').to.be.not.ok;
-				node.expect(res).to.have.property('message').to.equal('Transaction is already processed: ' + goodTransaction.id);
+				node.expect(res).to.have.property('message').to.equal('Transaction is already in pool: ' + goodTransaction.id);
 			});
 		});
 
@@ -105,7 +105,7 @@ describe('POST /api/transactions (type 0) transfer funds', function () {
 
 			return sendTransactionPromise(cloneGoodTransaction).then(function (res) {
 				node.expect(res).to.have.property('success').to.be.not.ok;
-				node.expect(res).to.have.property('message').to.equal('Transaction is already processed: ' + cloneGoodTransaction.id);
+				node.expect(res).to.have.property('message').to.equal('Transaction is already in pool: ' + cloneGoodTransaction.id);
 			});
 		});
 
@@ -114,7 +114,7 @@ describe('POST /api/transactions (type 0) transfer funds', function () {
 
 			return sendTransactionPromise(cloneGoodTransaction).then(function (res) {
 				node.expect(res).to.have.property('success').to.be.not.ok;
-				node.expect(res).to.have.property('message').to.equal('Transaction is already processed: ' + cloneGoodTransaction.id);
+				node.expect(res).to.have.property('message').to.equal('Transaction is already in pool: ' + cloneGoodTransaction.id);
 			});
 		});
 	});
