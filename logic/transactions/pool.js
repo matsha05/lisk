@@ -190,7 +190,7 @@ __private.checkPoolAvailability = function (transaction, waterCb) {
  * @return {setImmediateCallback} error | cb, transaction, sender
  */
 __private.setAccountAndGet = function (transaction, waterCb) {
-	modules.accounts.setAccountAndGet({publicKey: transaction.senderPublicKey}, function (err, cb) {
+	modules.accounts.setAccountAndGet({publicKey: transaction.senderPublicKey, transaction: transaction}, function (err, cb) {
 		return setImmediate(waterCb, err, transaction, cb);
 	});
 };

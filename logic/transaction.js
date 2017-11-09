@@ -380,24 +380,25 @@ Transaction.prototype.verify = function (transaction, sender, requester, cb) {
 	if (!__private.types[transaction.type]) {
 		return setImmediate(cb, 'Unknown transaction type ' + transaction.type);
 	}
-
+	console.log('sender', sender);
+	console.log('requester', requester);
 	// Check for missing sender second signature
-	if (!transaction.requesterPublicKey && sender.secondSignature && !transaction.signSignature && transaction.blockId !== this.scope.genesisblock.block.id) {
+	if (!transaction.requesterPublicKey && sender.secondPublicKey && !transaction.signSignature && transaction.blockId !== this.scope.genesisblock.block.id) {
 		return setImmediate(cb, 'Missing sender second signature');
 	}
 
 	// If second signature provided, check if sender has one enabled
-	if (!transaction.requesterPublicKey && !sender.secondSignature && (transaction.signSignature && transaction.signSignature.length > 0)) {
+	if (!transaction.requesterPublicKey && !sender.secondPublicKey && (transaction.signSignature && transaction.signSignature.length > 0)) {
 		return setImmediate(cb, 'Sender does not have a second signature');
 	}
 
 	// Check for missing requester second signature
-	if (transaction.requesterPublicKey && requester.secondSignature && !transaction.signSignature) {
+	if (transaction.requesterPublicKey && requester.secondPublicKey && !transaction.signSignature) {
 		return setImmediate(cb, 'Missing requester second signature');
 	}
 
 	// If second signature provided, check if requester has one enabled
-	if (transaction.requesterPublicKey && !requester.secondSignature && (transaction.signSignature && transaction.signSignature.length > 0)) {
+	if (transaction.requesterPublicKey && !requester.secondPublicKey && (transaction.signSignature && transaction.signSignature.length > 0)) {
 		return setImmediate(cb, 'Requester does not have a second signature');
 	}
 
@@ -474,7 +475,7 @@ Transaction.prototype.verify = function (transaction, sender, requester, cb) {
 	}
 
 	// Verify second signature
-	if (requester.secondSignature || sender.secondSignature) {
+	if (requester.secondPublicKey || sender.secondPublicKey) {
 		try {
 			valid = false;
 			valid = this.verifySecondSignature(transaction, (requester.secondPublicKey || sender.secondPublicKey), transaction.signSignature);

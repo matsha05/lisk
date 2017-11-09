@@ -157,11 +157,11 @@ Signature.prototype.undo = function (transaction, block, sender, cb) {
  * @return {setImmediateCallback} Error if second signature is already enabled.
  */
 Signature.prototype.applyUnconfirmed = function (transaction, sender, cb) {
-	if (sender.u_secondSignature || sender.secondSignature) {
+	if (sender.secondPublicKey) {
 		return setImmediate(cb, 'Second signature already enabled');
 	}
-
-	modules.accounts.setAccountAndGet({address: sender.address, u_secondSignature: 1}, cb);
+	return setImmediate(cb);
+	//modules.accounts.setAccountAndGet({address: sender.address, u_secondSignature: 1}, cb);
 };
 
 /**
@@ -245,9 +245,11 @@ Signature.prototype.dbFields = [
  */
 Signature.prototype.dbSave = function (transaction) {
 	var publicKey;
+	var secondPublicKey;
 
 	try {
-		publicKey = Buffer.from(transaction.asset.signature.publicKey, 'hex');
+		publicKey = Buffer.from(transaction.senderPublicKey, 'hex');
+		secondPublicKey = Buffer.from(transaction.asset.signature.publicKey, 'hex');
 	} catch (e) {
 		throw e;
 	}
@@ -257,7 +259,7 @@ Signature.prototype.dbSave = function (transaction) {
 		fields: this.dbFields,
 		values: {
 			transaction_id: transaction.id,
-			second_public_key: transaction.asset.signature.publicKey,
+			second_public_key: secondPublicKey,
 			public_key: publicKey
 		}
 	};

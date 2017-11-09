@@ -456,8 +456,7 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
 };
 
 /**
- * Generate new block
- * see: loader.loadBlockChain (private)
+ * Generates new block by getting ready transactions from pool and applying block
  *
  * @async
  * @public
@@ -490,14 +489,22 @@ Process.prototype.generateBlock = function (keypair, timestamp, cb) {
 	block.id = library.logic.block.getId(block);
 	block.height = lastBlock.height + 1;
 
-	// Delete default properties
-	var blockReduced = modules.blocks.verify.deleteBlockProperties(block);
-	var serializedBlockReduced = bson.serialize(blockReduced);
-	// Broadcast block - broadcast: true
-	modules.blocks.chain.broadcastReducedBlock(serializedBlockReduced, block.id, true);
-
 	// Apply block - saveBlock: true
-	modules.blocks.chain.applyBlock(block, true, cb);
+	modules.blocks.chain.applyBlock(block, true, function (err) {
+		// TODO: Standardize error with failure Codes.
+		if (err && err.fn === 'applyTransactions') {
+			return self.generateBlock(keypair, timestamp, cb);
+		}
+		if (err && err.fn === 'saveBlock') {
+			return setImmediate(cb, err.msg);
+		}
+		// Delete default properties
+		var blockReduced = modules.blocks.verify.deleteBlockProperties(block);
+		var serializedBlockReduced = bson.serialize(blockReduced);
+		// Broadcast block - broadcast: true
+		modules.blocks.chain.broadcastReducedBlock(serializedBlockReduced, block.id, true);
+		return setImmediate(cb, null);
+	});
 };
 
 /**

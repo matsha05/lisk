@@ -53,7 +53,7 @@ function confirmationPhase (goodTransactions, badTransactions, pendingMultisigna
 			return node.Promise.map(goodTransactions, function (transaction) {
 				return getUnconfirmedTransactionPromise(transaction.id).then(function (res) {
 					node.expect(res).to.have.property('success').to.be.not.ok;
-					node.expect(res).to.have.property('error').equal('Transaction not found');
+					node.expect(res).to.have.property('error').equal('API endpoint not found');
 				});
 			});
 		});

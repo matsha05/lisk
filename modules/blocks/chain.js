@@ -344,7 +344,7 @@ Chain.prototype.applyBlock = function (block, saveBlock, cb) {
 				modules.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
 					if (err) {
 						// Fatal error, memory tables will be inconsistent
-						err = ['Failed to apply transaction:', transaction.id, '-', err].join(' ');
+						err = ['Failed to getAccount while applying transaction:', transaction.id, '-', err].join(' ');
 						library.logger.error(err);
 						library.logger.error('Transaction', transaction);
 
@@ -353,14 +353,19 @@ Chain.prototype.applyBlock = function (block, saveBlock, cb) {
 					// DATABASE: write
 					modules.transactions.apply(transaction, block, sender, function (err) {
 						if (err) {
-							// Fatal error, memory tables will be inconsistent
 							err = ['Failed to apply transaction:', transaction.id, '-', err].join(' ');
 							library.logger.error(err);
-							library.logger.error('Transaction', transaction);
-
-							return process.exit(0);
+							// TODO-CHECK: instead of exit, delete tx that causes the issue, call apply block again.
+							// Break the loop by timestamp and current time or slot.
+							// return process.exit(0);
+							modules.transactions.removeUnconfirmedTransaction(transaction.id);
+							library.logger.error('Transaction deleted from block and pool', transaction);
+							err = {
+								msg: err,
+								fn: 'applyTransactions'
+							};
 						}
-						return setImmediate(eachSeriesCb);
+						return setImmediate(eachSeriesCb, err);
 					});
 				});
 			}, function (err) {
@@ -378,13 +383,17 @@ Chain.prototype.applyBlock = function (block, saveBlock, cb) {
 						// Fatal error, memory tables will be inconsistent
 						library.logger.error('Failed to save block...');
 						library.logger.error('Block', block);
-
-						return process.exit(0);
+						// TODO-CHECK: instead of exit, return error. Standarize error with failureCodes.
+						//return process.exit(0);
+						err = {
+							msg: err,
+							fn: 'saveBlock'
+						};
 					}
 
-					library.logger.debug('Block applied correctly with ' + block.transactions.length + ' transactions');
+					library.logger.debug(['Block', block.id, 'applied correctly with', block.transactions.length, 'transactions'].join(' '));
 
-					return seriesCb();
+					return setImmediate(seriesCb, err);
 				});
 			} else {
 				return seriesCb();

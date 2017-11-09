@@ -52,7 +52,7 @@ var TransactionsSql = {
 
 	getDelegateById: 'SELECT name AS "d_username" FROM delegates WHERE "transaction_id" = ${id}',
 
-	getSignatureById: 'SELECT ENCODE ("publicKey", \'hex\') AS "s_publicKey" FROM signatures WHERE "transaction_id" = ${id}',
+	getSignatureById: 'SELECT ENCODE ("publicKey", \'hex\') AS "s_publicKey" FROM second_signature WHERE "transaction_id" = ${id}',
 
 // TODO: Add multisignatures member here - Covert old keysgroup and LEFT JOIN keysgroup AS "m_keysgroup"
 	getMultiById: 'SELECT minimum AS "m_min", lifetime AS "m_lifetime" FROM multisignatures_master WHERE "transaction_id" = ${id}',

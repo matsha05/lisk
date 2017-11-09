@@ -138,12 +138,15 @@ Accounts.prototype.setAccountAndGet = function (data, cb) {
 			return setImmediate(cb, err);
 		}
 		if (account === null) {
+			var secondPublicKey = (((data.transaction || {}).asset || {}).signature || {}).publicKey;
+			var multisignatures = ((data.transaction || {}).asset || {}).multisignatures;
+			
 			account = {};
 			account.balance = 0;
 			account.address = address;
 			account.publicKey = data.publicKey;
-			account.secondPublicKey = data.secondPublicKey || null;
-			account.multisignatures = data.multisignatures || null;
+			account.secondPublicKey = secondPublicKey;
+			account.multisignatures = multisignatures;
 		}
 		return setImmediate(cb, null, account);
 	});

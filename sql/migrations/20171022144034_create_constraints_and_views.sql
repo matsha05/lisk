@@ -202,7 +202,7 @@ $$;
   SELECT DISTINCT a.address,
                   a.balance     AS balance,
                   a.public_key  AS "publicKey",
-                  ss.public_key AS "secondPublicKey",
+                  ss.second_public_key AS "secondPublicKey",
                   d.name        AS username,
                   d.rank,
                   d.fees,
@@ -215,17 +215,17 @@ $$;
                   mma.minimum           AS multimin
   FROM            ((((accounts a
   left join       delegates d
-  ON              (((
-                                                                  d.public_key)::text = (a.public_key)::text)))
+  ON              ((
+                                                                  d.public_key = a.public_key)))
   left join       multisignatures_master mma
-  ON              (((
-                                                                  mma."public_key")::text = (a.public_key)::text)))
+  ON              ((
+                                                                  mma."public_key" = a.public_key)))
   left join       second_signature ss
-  ON              (((
-                                                                  ss."public_key")::text = (a.public_key)::text)))
+  ON              ((
+                                                                  ss."public_key" = a.public_key)))
   left join       multisignatures_member mme
-  ON              (((
-                                                                  mme."public_key")::text = (a.public_key)::text)));
+  ON              ((
+                                                                  mme."public_key" = a.public_key)));
 
   CREATE VIEW "public".blocks_list                     AS
   SELECT b.block_id                                    AS b_id,
