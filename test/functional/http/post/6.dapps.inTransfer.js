@@ -50,6 +50,17 @@ describe('POST /api/transactions (type 6) inTransfer dapp', function () {
 				transactionsToWaitFor.push(res.transactionId);
 			})
 			.then(function () {
+				transaction = node.lisk.dapp.createDapp(accountMinimalFunds.password, null, node.blockDataDapp);
+
+				return sendTransactionPromise(transaction);
+			})
+			.then(function (res) {
+				node.expect(res).to.have.property('success').to.ok;
+				node.expect(res).to.have.property('transactionId').to.equal(transaction.id);
+				node.blockDataDapp.id = res.transactionId;
+				transactionsToWaitFor.push(res.transactionId);
+			})
+			.then(function () {
 				return waitForConfirmations(transactionsToWaitFor);
 			});
 	});
@@ -115,8 +126,66 @@ describe('POST /api/transactions (type 6) inTransfer dapp', function () {
 				});
 			});
 
-			it('with correct data should be ok', function () {
-				transaction = node.lisk.transfer.createInTransfer(node.guestbookDapp.id, 1, node.gAccount.password);
+			it('invalid dapp id should fail', function () {
+				var invalidDappId = '1L';
+				transaction = node.lisk.transfer.createInTransfer(invalidDappId, 1, node.gAccount.password);
+
+				return sendTransactionPromise(transaction).then(function (res) {
+					node.expect(res).to.have.property('success').to.be.not.ok;
+					node.expect(res).to.have.property('message').to.equal('Invalid transaction body - Failed to validate inTransfer schema: Object didn\'t pass validation for format id: ' + invalidDappId);
+					badTransactions.push(transaction);
+				});
+			});
+		});
+	});
+
+	describe('transactions processing', function () {
+
+		it('invented dapp id should fail', function () {
+			var inventedDappId  = '1';
+			transaction = node.lisk.transfer.createInTransfer(inventedDappId, 1, node.gAccount.password);
+
+			return sendTransactionPromise(transaction).then(function (res) {
+				node.expect(res).to.have.property('success').to.be.not.ok;
+				node.expect(res).to.have.property('message').to.equal('Application not found: ' + inventedDappId);
+				badTransactions.push(transaction);
+			});
+		});
+
+		it('using unrelated transaction id as dapp id should fail', function () {
+			transaction = node.lisk.transfer.createInTransfer(transactionsToWaitFor[0], 1, node.gAccount.password);
+
+			return sendTransactionPromise(transaction).then(function (res) {
+				node.expect(res).to.have.property('success').to.be.not.ok;
+				node.expect(res).to.have.property('message').to.equal('Application not found: ' + transactionsToWaitFor[0]);
+				badTransactions.push(transaction);
+			});
+		});
+
+		it('with correct data should be ok', function () {
+			transaction = node.lisk.transfer.createInTransfer(node.guestbookDapp.id, 1, node.gAccount.password);
+
+			return sendTransactionPromise(transaction).then(function (res) {
+				node.expect(res).to.have.property('success').to.be.ok;
+				node.expect(res).to.have.property('transactionId').to.equal(transaction.id);
+				goodTransactions.push(transaction);
+			});
+		});
+
+		describe('from the author', function (){
+
+			it('with minimal funds should fail', function () {
+				transaction = node.lisk.transfer.createInTransfer(node.blockDataDapp.id, 1, accountMinimalFunds.password);
+
+				return sendTransactionPromise(transaction).then(function (res) {
+					node.expect(res).to.have.property('success').to.be.not.ok;
+					node.expect(res).to.have.property('message').to.match(/^Account does not have enough LSK: /);
+					badTransactions.push(transaction);
+				});
+			});
+
+			it('with enough funds should be ok', function () {
+				transaction = node.lisk.transfer.createInTransfer(node.guestbookDapp.id, 1, account.password);
 
 				return sendTransactionPromise(transaction).then(function (res) {
 					node.expect(res).to.have.property('success').to.be.ok;
@@ -125,9 +194,6 @@ describe('POST /api/transactions (type 6) inTransfer dapp', function () {
 				});
 			});
 		});
-	});
-
-	describe('transactions processing', function () {
 	});
 
 	describe('unconfirmed state', function () {
